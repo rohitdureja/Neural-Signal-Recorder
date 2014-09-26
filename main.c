@@ -16,6 +16,7 @@
 #include "driverlib/uart.h"
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
+#include "adg731.h"
 
 #define SIZE 20
 
@@ -132,45 +133,50 @@ int main(void)
     // Enable UART operation
     ConfigureUART();
 
-    UARTgetc();
-    bufferA = (unsigned char **)malloc(8*sizeof(unsigned char*));
-    for(i=0;i<10;i++)
-    	bufferA[i] = (unsigned char *)malloc(512*sizeof(unsigned char));
-
-    for(i=0;i<8;i++)
-    {
-    	for(j=0;j<512;j++)
-    	{
-    		bufferA[i][j]=i;
-    		UARTprintf("%d", bufferA[i][j]);
-    	}
-    }
-
-    bufferB = (unsigned char **)malloc(8*sizeof(unsigned char*));
-        for(i=0;i<8;i++)
-        	bufferB[i] = (unsigned char *)malloc(512*sizeof(unsigned char));
-
-        for(i=0;i<8;i++)
-        {
-        	for(j=0;j<512;j++)
-        	{
-        		bufferB[i][j]=i;
-        		UARTprintf("%d", bufferB[i][j]);
-        	}
-        }
+    muxInit();
 
 
-    UARTprintf("Number of ticks: %d\n", bufferA[0][0]);//ROM_SysCtlClockGet()/SAMPLE_FREQ);
-    UARTprintf("Number of ticks: %d\n", bufferB[0][1]);
-
-    // Enable SysTick operation
-    ConfigureSysTick();
-
-    // Enable ADC operation
-    ConfigureADC();
-    // Loop Forever
+//    UARTgetc();
+//    bufferA = (unsigned char **)malloc(8*sizeof(unsigned char*));
+//    for(i=0;i<10;i++)
+//    	bufferA[i] = (unsigned char *)malloc(512*sizeof(unsigned char));
+//
+//    for(i=0;i<8;i++)
+//    {
+//    	for(j=0;j<512;j++)
+//    	{
+//    		bufferA[i][j]=i;
+//    		UARTprintf("%d", bufferA[i][j]);
+//    	}
+//    }
+//
+//    bufferB = (unsigned char **)malloc(8*sizeof(unsigned char*));
+//        for(i=0;i<8;i++)
+//        	bufferB[i] = (unsigned char *)malloc(512*sizeof(unsigned char));
+//
+//        for(i=0;i<8;i++)
+//        {
+//        	for(j=0;j<512;j++)
+//        	{
+//        		bufferB[i][j]=i;
+//        		UARTprintf("%d", bufferB[i][j]);
+//        	}
+//        }
+//
+//
+//    UARTprintf("Number of ticks: %d\n", bufferA[0][0]);//ROM_SysCtlClockGet()/SAMPLE_FREQ);
+//    UARTprintf("Number of ticks: %d\n", bufferB[0][1]);
+//
+//    // Enable SysTick operation
+//    ConfigureSysTick();
+//
+//    // Enable ADC operation
+//    ConfigureADC();
+//    // Loop Forever
     while(1)
     {
-    	ROM_SysCtlSleep();
+    	//ROM_SysCtlSleep();
+    	muxChannelChange(0x2A);
+    	muxChannelChange(20);
     }
 }

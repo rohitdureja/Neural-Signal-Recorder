@@ -15,6 +15,7 @@ $(GEN_CMDS__FLAG) \
 "./spi.obj" \
 "./nrf24l01.obj" \
 "./main.obj" \
+"./adg731.obj" \
 "../four_ch_neural_recorder_ccs.cmd" \
 -l"libc.a" \
 -l"C:/ti/TivaWare_C_Series-1.1/examples/boards/ek-tm4c123gxl/project0/ccs/../../../../../driverlib/ccs/Debug/driverlib.lib" \
@@ -132,8 +133,8 @@ four_ch_neural_recorder.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(TMS470_EXECUTABLE_OUTPUTS__QUOTED) "four_ch_neural_recorder.out"
-	-$(RM) "main.pp" "nrf24l01.pp" "spi.pp" "startup_ccs.pp" "utils\cpu_usage.pp" "utils\uartstdio.pp" "utils\ustdlib.pp" 
-	-$(RM) "main.obj" "nrf24l01.obj" "spi.obj" "startup_ccs.obj" "utils\cpu_usage.obj" "utils\uartstdio.obj" "utils\ustdlib.obj" 
+	-$(RM) "adg731.pp" "main.pp" "nrf24l01.pp" "spi.pp" "startup_ccs.pp" "utils\cpu_usage.pp" "utils\uartstdio.pp" "utils\ustdlib.pp" 
+	-$(RM) "adg731.obj" "main.obj" "nrf24l01.obj" "spi.obj" "startup_ccs.obj" "utils\cpu_usage.obj" "utils\uartstdio.obj" "utils\ustdlib.obj" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
