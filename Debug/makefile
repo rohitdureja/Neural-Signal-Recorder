@@ -12,6 +12,8 @@ $(GEN_CMDS__FLAG) \
 "./utils/uartstdio.obj" \
 "./utils/cpu_usage.obj" \
 "./startup_ccs.obj" \
+"./spi.obj" \
+"./nrf24l01.obj" \
 "./main.obj" \
 "../four_ch_neural_recorder_ccs.cmd" \
 -l"libc.a" \
@@ -122,7 +124,7 @@ all: four_ch_neural_recorder.out
 four_ch_neural_recorder.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccsv5/tools/compiler/arm_5.1.1/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -O2 --opt_for_speed=5 -g --gcc --define=ccs="ccs" --define=PART_TM4C123GH6PM --define=TARGET_IS_BLIZZARD_RB1 --diag_warning=225 --display_error_number --diag_wrap=off --gen_func_subsections=on --ual -z --stack_size=256 -m"project0_ccs.map" --heap_size=0 -i"C:/ti/ccsv5/tools/compiler/arm_5.1.1/lib" -i"C:/ti/ccsv5/tools/compiler/arm_5.1.1/include" --reread_libs --warn_sections --display_error_number --diag_wrap=off --xml_link_info="four_ch_neural_recorder_linkInfo.xml" --rom_model -o "four_ch_neural_recorder.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv5/tools/compiler/arm_5.1.1/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -O2 --opt_for_speed=5 -g --gcc --define=ccs="ccs" --define=PART_TM4C123GH6PM --define=TARGET_IS_BLIZZARD_RB1 --diag_warning=225 --display_error_number --diag_wrap=off --gen_func_subsections=on --ual -z --stack_size=1024 -m"project0_ccs.map" --heap_size=0x4000 -i"C:/ti/ccsv5/tools/compiler/arm_5.1.1/lib" -i"C:/ti/ccsv5/tools/compiler/arm_5.1.1/include" --reread_libs --warn_sections --display_error_number --diag_wrap=off --xml_link_info="four_ch_neural_recorder_linkInfo.xml" --rom_model -o "four_ch_neural_recorder.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -130,8 +132,8 @@ four_ch_neural_recorder.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(TMS470_EXECUTABLE_OUTPUTS__QUOTED) "four_ch_neural_recorder.out"
-	-$(RM) "main.pp" "startup_ccs.pp" "utils\cpu_usage.pp" "utils\uartstdio.pp" "utils\ustdlib.pp" 
-	-$(RM) "main.obj" "startup_ccs.obj" "utils\cpu_usage.obj" "utils\uartstdio.obj" "utils\ustdlib.obj" 
+	-$(RM) "main.pp" "nrf24l01.pp" "spi.pp" "startup_ccs.pp" "utils\cpu_usage.pp" "utils\uartstdio.pp" "utils\ustdlib.pp" 
+	-$(RM) "main.obj" "nrf24l01.obj" "spi.obj" "startup_ccs.obj" "utils\cpu_usage.obj" "utils\uartstdio.obj" "utils\ustdlib.obj" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

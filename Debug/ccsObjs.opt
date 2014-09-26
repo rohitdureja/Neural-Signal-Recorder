@@ -1,1 +1,1 @@
-"./utils/ustdlib.obj" "./utils/uartstdio.obj" "./utils/cpu_usage.obj" "./startup_ccs.obj" "./main.obj" "../four_ch_neural_recorder_ccs.cmd" -l"libc.a" -l"C:/ti/TivaWare_C_Series-1.1/examples/boards/ek-tm4c123gxl/project0/ccs/../../../../../driverlib/ccs/Debug/driverlib.lib" 
+"./utils/ustdlib.obj" "./utils/uartstdio.obj" "./utils/cpu_usage.obj" "./startup_ccs.obj" "./spi.obj" "./nrf24l01.obj" "./main.obj" "../four_ch_neural_recorder_ccs.cmd" -l"libc.a" -l"C:/ti/TivaWare_C_Series-1.1/examples/boards/ek-tm4c123gxl/project0/ccs/../../../../../driverlib/ccs/Debug/driverlib.lib" 

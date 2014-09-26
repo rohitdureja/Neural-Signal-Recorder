@@ -1,5 +1,33 @@
 #include "main.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include "inc/hw_ints.h"
+#include "inc/hw_memmap.h"
+#include "inc/hw_types.h"
+#include "driverlib/debug.h"
+#include "driverlib/gpio.h"
+#include "driverlib/adc.h"
+#include "driverlib/pin_map.h"
+#include "driverlib/interrupt.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/systick.h"
+#include "driverlib/timer.h"
+#include "driverlib/uart.h"
+#include "driverlib/rom.h"
+#include "utils/uartstdio.h"
+
 #define SIZE 20
+
+// Global variables
+
+// Ping Pong buffers for ADC
+unsigned char **bufferA;
+unsigned char **bufferB;
+
+// Flag for initial configuration status
+bool isConfigured = false;
+
 
 // SysTick Interrupt Handler
 void SysTickIntHandler(void)
@@ -16,114 +44,6 @@ void SysTickIntHandler(void)
 
 	ROM_ADCIntClear(ADC0_BASE, 3);
 	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueA);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueB);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueC);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
-
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
-	{
-	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValueD);
 
 	for(i = 0 ; i < SIZE ; i++)
 	{
@@ -197,7 +117,8 @@ void ConfigureTimer()
 
 int main(void)
 {
-    // Setup the system clock to run at 12.5 Mhz from PLL with internal oscillator and disable main oscillator
+    int i,j;
+	// Setup the system clock to run at 12.5 Mhz from PLL with internal oscillator and disable main oscillator
 	ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
 
    // Enable and configure the GPIO port for pin operation
@@ -211,7 +132,36 @@ int main(void)
     // Enable UART operation
     ConfigureUART();
 
-    UARTprintf("Number of ticks: %d\n", ROM_SysCtlClockGet()/SAMPLE_FREQ);
+    UARTgetc();
+    bufferA = (unsigned char **)malloc(8*sizeof(unsigned char*));
+    for(i=0;i<10;i++)
+    	bufferA[i] = (unsigned char *)malloc(512*sizeof(unsigned char));
+
+    for(i=0;i<8;i++)
+    {
+    	for(j=0;j<512;j++)
+    	{
+    		bufferA[i][j]=i;
+    		UARTprintf("%d", bufferA[i][j]);
+    	}
+    }
+
+    bufferB = (unsigned char **)malloc(8*sizeof(unsigned char*));
+        for(i=0;i<8;i++)
+        	bufferB[i] = (unsigned char *)malloc(512*sizeof(unsigned char));
+
+        for(i=0;i<8;i++)
+        {
+        	for(j=0;j<512;j++)
+        	{
+        		bufferB[i][j]=i;
+        		UARTprintf("%d", bufferB[i][j]);
+        	}
+        }
+
+
+    UARTprintf("Number of ticks: %d\n", bufferA[0][0]);//ROM_SysCtlClockGet()/SAMPLE_FREQ);
+    UARTprintf("Number of ticks: %d\n", bufferB[0][1]);
 
     // Enable SysTick operation
     ConfigureSysTick();
