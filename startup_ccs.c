@@ -53,6 +53,7 @@ extern uint32_t __STACK_TOP;
 
 // External interrupt handlers
 extern void SysTickIntHandler(void);
+extern void IRQInterruptHandler(void);
 
 //*****************************************************************************
 //
@@ -82,7 +83,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // The PendSV handler
     SysTickIntHandler,                      // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
-    IntDefaultHandler,                      // GPIO Port B
+    IRQInterruptHandler,                    // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E

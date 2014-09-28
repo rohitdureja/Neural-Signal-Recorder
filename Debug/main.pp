@@ -1,7 +1,6 @@
 # FIXED
 
 main.obj: ../main.c
-main.obj: ../main.h
 main.obj: C:/ti/ccsv5/tools/compiler/arm_5.1.1/include/stdbool.h
 main.obj: C:/ti/ccsv5/tools/compiler/arm_5.1.1/include/yvals.h
 main.obj: C:/ti/ccsv5/tools/compiler/arm_5.1.1/include/stdarg.h
@@ -25,9 +24,11 @@ main.obj: C:/ti/TivaWare_C_Series-1.1/driverlib/rom.h
 main.obj: C:/ti/TivaWare_C_Series-1.1/utils/uartstdio.h
 main.obj: C:/ti/ccsv5/tools/compiler/arm_5.1.1/include/stdarg.h
 main.obj: ../adg731.h
+main.obj: ../main.h
+main.obj: ../nrf24l01.h
+main.obj: ../spi.h
 
 ../main.c: 
-../main.h: 
 C:/ti/ccsv5/tools/compiler/arm_5.1.1/include/stdbool.h: 
 C:/ti/ccsv5/tools/compiler/arm_5.1.1/include/yvals.h: 
 C:/ti/ccsv5/tools/compiler/arm_5.1.1/include/stdarg.h: 
@@ -51,3 +52,6 @@ C:/ti/TivaWare_C_Series-1.1/driverlib/rom.h:
 C:/ti/TivaWare_C_Series-1.1/utils/uartstdio.h: 
 C:/ti/ccsv5/tools/compiler/arm_5.1.1/include/stdarg.h: 
 ../adg731.h: 
+../main.h: 
+../nrf24l01.h: 
+../spi.h: 
