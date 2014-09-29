@@ -18,19 +18,46 @@
 #include "adg731.h"
 #include "main.h"
 
-#define SIZE 20
 
 // SysTick Interrupt Handler
 void SysTickIntHandler(void)
 {
-	uint8_t ADCValue[1];
-	ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-	while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
+	uint32_t ADCValue, i;
+	static uint32_t count = 0;
+	for(i = 0 ; i < ui32NumOfChannels ; i++)
 	{
+		muxChannelChange(0); // Change channel
+		ROM_ADCProcessorTrigger(ADC0_BASE, 3);
+		while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
+		{
+		}
+		ROM_ADCIntClear(ADC0_BASE, 3);
+		ROM_ADCSequenceDataGet(ADC0_BASE, 3, &ADCValue);
+		if(ui32BufferMode == MODE_A)
+		{
+			bufferA[i][count] = (ADCValue>>4); // Make 12-bit ADC value to 8-bit and store in buffer
+		}
+		else if (ui32BufferMode == MODE_B)
+		{
+			bufferB[i][count] = (ADCValue>>4);
+		}
 	}
-	ROM_ADCIntClear(ADC0_BASE, 3);
-	ROM_ADCSequenceDataGet(ADC0_BASE, 3, ADCValue);
-	UARTprintf("%d\n", ADCValue[0]);
+	count = count + 1;
+	if(count == ui32WindowSize)
+	{
+		count = 0;
+		// Switch channels
+		if(ui32BufferMode == MODE_A)
+		{
+			ui32BufferMode = MODE_B;
+			RFTransmit(MODE_A); // Start transmitting contents of buffer A.
+		}
+		else if(ui32BufferMode == MODE_B)
+		{
+			ui32BufferMode = MODE_A;
+			RFTransmit(MODE_B); // Start transmitting contents of buffer B.
+		}
+	}
 }
 
 // UART configuration for uartstdio library
@@ -70,7 +97,9 @@ void ConfigureADC(void)
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
 	ROM_GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_3); // EVK Board
 	ROM_ADCSequenceConfigure(ADC0_BASE, 3, ADC_TRIGGER_PROCESSOR, 0);
+	ROM_ADCReferenceSet(ADC0_BASE, ADC_REF_EXT_3V);
 	ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END);
+	ROM_ADCHardwareOversampleConfigure(ADC0_BASE, 64);
 	ROM_ADCSequenceEnable(ADC0_BASE, 3);
 	ROM_ADCIntClear(ADC0_BASE, 3);
 }
@@ -80,12 +109,17 @@ void BufferInit(uint32_t channels, uint32_t window)
 {
 	uint32_t i;
 	bufferA = (unsigned char **)malloc(channels*sizeof(unsigned char*));
-	 for(i=0;i<channels;i++)
-		 bufferA[i] = (unsigned char *)malloc(window*sizeof(unsigned char));
-
-	 bufferB = (unsigned char **)malloc(channels*sizeof(unsigned char*));
-	 	 for(i=0;i<channels;i++)
-	    	bufferB[i] = (unsigned char *)malloc(window*sizeof(unsigned char));
+	for(i=0;i<channels;i++)
+	{
+		bufferA[i] = (unsigned char *)malloc(window*sizeof(unsigned char));
+	}
+	bufferB = (unsigned char **)malloc(channels*sizeof(unsigned char*));
+	for(i=0;i<channels;i++)
+	{
+		bufferB[i] = (unsigned char *)malloc(window*sizeof(unsigned char));
+	}
+	// Set buffer A as defualt buffer
+	ui32BufferMode = MODE_A;
 }
 
 // Interrupt handler for RF TX failures
@@ -133,7 +167,6 @@ void RFTransmit(uint8_t buffer)
 // Main application code
 int main(void)
 {
-	int i;
 	// Setup the system clock to run at 80 Mhz from PLL with internal oscillator and disable main oscillator
 	ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
 

@@ -10,7 +10,11 @@
 #include "nrf24l01.h"
 #include "spi.h"
 
-#define SAMPLE_FREQ 5000UL
+#define SAMPLE_FREQ 20000UL
+
+// Buffer modes
+#define MODE_A 0
+#define MODE_B 1
 
 // Function prototypes
 void SysTickHandler(void);
