@@ -22,7 +22,9 @@
 // SysTick Interrupt Handler
 void SysTickIntHandler(void)
 {
-	uint32_t ADCValue, i;
+	static uint8_t mode = 0;
+	uint32_t ADCValue;
+	uint8_t i;
 	static uint32_t count = 0;
 	for(i = 0 ; i < ui32NumOfChannels ; i++)
 	{
@@ -50,14 +52,24 @@ void SysTickIntHandler(void)
 		if(ui32BufferMode == MODE_A)
 		{
 			ui32BufferMode = MODE_B;
-			RFTransmit(MODE_A); // Start transmitting contents of buffer A.
+			transmitOn = true; // start transmission
 		}
 		else if(ui32BufferMode == MODE_B)
 		{
 			ui32BufferMode = MODE_A;
-			RFTransmit(MODE_B); // Start transmitting contents of buffer B.
+			transmitOn = true; //  start transmission
 		}
 	}
+	if(mode == 0)
+		{
+			GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, GPIO_PIN_1);
+			mode = 1;
+		}
+		else
+		{
+			GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, 0);
+			mode = 0;
+		}
 }
 
 // UART configuration for uartstdio library
@@ -99,7 +111,7 @@ void ConfigureADC(void)
 	ROM_ADCSequenceConfigure(ADC0_BASE, 3, ADC_TRIGGER_PROCESSOR, 0);
 	ROM_ADCReferenceSet(ADC0_BASE, ADC_REF_EXT_3V);
 	ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END);
-	ROM_ADCHardwareOversampleConfigure(ADC0_BASE, 64);
+	//ROM_ADCHardwareOversampleConfigure(ADC0_BASE, 64);
 	ROM_ADCSequenceEnable(ADC0_BASE, 3);
 	ROM_ADCIntClear(ADC0_BASE, 3);
 }
@@ -107,7 +119,7 @@ void ConfigureADC(void)
 // Configure ping pong buffers for ADC operations
 void BufferInit(uint32_t channels, uint32_t window)
 {
-	uint32_t i;
+	uint8_t i;
 	bufferA = (unsigned char **)malloc(channels*sizeof(unsigned char*));
 	for(i=0;i<channels;i++)
 	{
@@ -167,7 +179,8 @@ void RFTransmit(uint8_t buffer)
 // Main application code
 int main(void)
 {
-	// Setup the system clock to run at 80 Mhz from PLL with internal oscillator and disable main oscillator
+	int i;
+	// Setup the system clock to run at 12 Mhz from PLL with internal oscillator and disable main oscillator
 	ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
 
 	// Enable and configure the GPIO port for the LED operation.
@@ -189,12 +202,14 @@ int main(void)
     ROM_GPIOPadConfigSet(IRQ_BASE, IRQ, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
     GPIOIntRegister(IRQ_BASE, IRQInterruptHandler);
     ROM_GPIOIntTypeSet(IRQ_BASE, IRQ, GPIO_FALLING_EDGE);
-    GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad Board
+    GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_7); // EVK Board Launchpad Board
     //GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_4); // 32 channel Board
 
-    ui32NumOfChannels = 1;
-    ui32WindowSize = 256;
-    BufferInit(ui32NumOfChannels, ui32WindowSize);
+    // Initial configuration parameters
+    ui32NumOfChannels = 1;  // number of channels
+    ui32WindowSize = 256;	// window length
+    BufferInit(ui32NumOfChannels, ui32WindowSize);	// initialise buffer
+    transmitOn = false;
 
     // Enable SysTick operation
     ConfigureSysTick();
@@ -202,20 +217,37 @@ int main(void)
     // Enable ADC operation
     ConfigureADC();
 
-//    // --------------- TX operation  ------------- //
-//    // Generate packet to send
-//    for(i = 1 ; i <= 32 ; ++i)
-//    	ui32TxBuffer[i-1] = i;
-//    // --------------- TX operation  ------------- //
+    // --------------- TX operation  ------------- //
+    // Generate packet to send
+    for(i = 1 ; i <= 32 ; ++i)
+    	ui32TxBuffer[i-1] = i;
+    // --------------- TX operation  ------------- //
 
     // Loop Forever
     while(1)
     {
-//    	// --------------- TX operation  ------------- //
-//        // Send packet every one second
-//        RFWriteSendBuffer(ui32TxBuffer, 32);
-//        ROM_SysCtlDelay(SysCtlClockGet()/3);
-//        // --------------- TX operation  ------------- //
+//    	if(transmitOn == true)
+//    	{
+//    		if(ui32BufferMode == MODE_A) // Transfer contents from B
+//    		{
+//    			//UARTprintf("b\n");
+//    			//transmitOn = false;
+//    		}
+//    		else if(ui32BufferMode == MODE_B) // Transfer contents from  A
+//    		{
+//    			//UARTprintf("a\n");
+//    			//transmitOn = false;
+//    		}
+//    	}
+//    	else
+//    	{
+//    		ROM_SysCtlSleep();
+//    	}
+    	// --------------- TX operation  ------------- //
+        // Send packet every one second
+        RFWriteSendBuffer(ui32TxBuffer, 32);
+        ROM_SysCtlDelay(SysCtlClockGet()/3);
+        // --------------- TX operation  ------------- //
     }
 //    // Wait till initial configuration data is received
 //    while(isConfigured==false)

@@ -10,7 +10,7 @@
 #include "nrf24l01.h"
 #include "spi.h"
 
-#define SAMPLE_FREQ 20000UL
+#define SAMPLE_FREQ 5000UL
 
 // Buffer modes
 #define MODE_A 0
@@ -38,15 +38,18 @@ unsigned char **bufferB;
 
 // Buffers for RF RX and TX
 uint32_t ui32TxBuffer[MAX_PLOAD];
-uint32_t ui32RxBuffer[MAX_PLOAD];
+uint8_t ui32RxBuffer[MAX_PLOAD];
 
 // configuration parameters
-uint32_t ui32NumOfChannels;
+uint8_t ui32NumOfChannels;
 uint32_t ui32WindowSize;
 uint8_t ui32BufferMode;
 
 // Flag for initial configuration status
 bool isConfigured;
+
+// Flag indicating transfer window
+bool transmitOn;
 
 // The error routine that is called if the driver library encounters an error.
 #ifdef DEBUG
