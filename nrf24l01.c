@@ -6,6 +6,7 @@
  */
 
 #include "nrf24l01.h"
+#include "utils/uartstdio.h"
 
 // initialize the RF module
 void RFInit(uint32_t ui32Mode)
@@ -117,8 +118,8 @@ uint32_t RFReadRegister(uint32_t ui32Register)
 // write to send buffer. Returns numbers of bytes written
 uint32_t RFWriteSendBuffer(uint32_t *ui32Data, uint32_t ui32Bytes)
 {
-	uint32_t i;
 
+	uint32_t i;
 	//Flush TX buffer
 	SPISetCSNLow();
 	SPIDataWrite(FLUSH_TX);
@@ -139,7 +140,10 @@ uint32_t RFWriteSendBuffer(uint32_t *ui32Data, uint32_t ui32Bytes)
 
 	// Flush SPI RX FIFO to remove residual data
 	SPIRXFlush();
+
+
 	return i;
+
 }
 
 // read from recive buffer. Returns number of bytes read

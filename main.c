@@ -35,6 +35,7 @@ void SysTickIntHandler(void)
 		}
 		ROM_ADCIntClear(ADC0_BASE, 3);
 		ROM_ADCSequenceDataGet(ADC0_BASE, 3, &ADCValue);
+		RFWriteSendBuffer(&ADCValue, 1);
 		if(ui32BufferMode == MODE_A)
 		{
 			bufferA[i][count] = (ADCValue>>4); // Make 12-bit ADC value to 8-bit and store in buffer
@@ -61,15 +62,15 @@ void SysTickIntHandler(void)
 		}
 	}
 	if(mode == 0)
-		{
-			GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, GPIO_PIN_1);
-			mode = 1;
-		}
-		else
-		{
-			GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, 0);
-			mode = 0;
-		}
+	{
+		GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, GPIO_PIN_1);
+		mode = 1;
+	}
+	else
+	{
+		GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, 0);
+		mode = 0;
+	}
 }
 
 // UART configuration for uartstdio library
@@ -111,7 +112,6 @@ void ConfigureADC(void)
 	ROM_ADCSequenceConfigure(ADC0_BASE, 3, ADC_TRIGGER_PROCESSOR, 0);
 	ROM_ADCReferenceSet(ADC0_BASE, ADC_REF_EXT_3V);
 	ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END);
-	//ROM_ADCHardwareOversampleConfigure(ADC0_BASE, 64);
 	ROM_ADCSequenceEnable(ADC0_BASE, 3);
 	ROM_ADCIntClear(ADC0_BASE, 3);
 }
@@ -137,6 +137,7 @@ void BufferInit(uint32_t channels, uint32_t window)
 // Interrupt handler for RF TX failures
 void IRQInterruptHandler(void)
 {
+	IntMasterDisable();
 	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad: clear interrupt flag
 	//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32-channel: clear interrupt flag
 
@@ -168,6 +169,7 @@ void IRQInterruptHandler(void)
 	// --------------- TX operation  ------------- //
 
 	SPISetCEHigh(); // set CE high again to start all operation
+	IntMasterEnable();
 }
 
 // Function to transfer passed buffer over RF
@@ -216,7 +218,6 @@ int main(void)
 
     // Enable ADC operation
     ConfigureADC();
-
     // --------------- TX operation  ------------- //
     // Generate packet to send
     for(i = 1 ; i <= 32 ; ++i)
@@ -226,7 +227,8 @@ int main(void)
     // Loop Forever
     while(1)
     {
-//    	if(transmitOn == true)
+   	//UARTprintf("here3\n");
+   // 	if(transmitOn == true)
 //    	{
 //    		if(ui32BufferMode == MODE_A) // Transfer contents from B
 //    		{
@@ -245,8 +247,9 @@ int main(void)
 //    	}
     	// --------------- TX operation  ------------- //
         // Send packet every one second
-        RFWriteSendBuffer(ui32TxBuffer, 32);
-        ROM_SysCtlDelay(SysCtlClockGet()/3);
+//        RFWriteSendBuffer(ui32TxBuffer, 32);
+//        ROM_SysCtlDelay(SysCtlClockGet()/3);
+
         // --------------- TX operation  ------------- //
     }
 //    // Wait till initial configuration data is received

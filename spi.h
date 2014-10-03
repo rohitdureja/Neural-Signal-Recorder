@@ -23,7 +23,7 @@
 #define CE_BASE 		GPIO_PORTB_BASE
 #define SPI_PORT_BASE 	GPIO_PORTD_BASE // define for SPI gpio port base
 #define SPI_BASE 		SSI3_BASE // define for SPI base
-#define IRQ_BASE 		GPIO_PORTB_BASE
+#define IRQ_BASE 		GPIO_PORTB_BASE // EVK, 32 channel
 
 // Function definitions
 

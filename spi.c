@@ -21,7 +21,7 @@ void SPIInit(void)
 	// enable SSI3 and GPIOD peripherals
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI3);
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // CE and IRQ are on Port B
+	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // CE and IRQ are on Port B..EVK/32 channel
 
 	// Configure GPIO pins for special functions except CSN, CE and IRQ which are under software control
 	GPIOPinConfigure(GPIO_PD0_SSI3CLK);
@@ -32,7 +32,6 @@ void SPIInit(void)
 	// Configure GPIO pins for CE, CSN and IRQ
 	ROM_GPIOPinTypeGPIOOutput(SPI_PORT_BASE, CSN);
 	ROM_GPIOPinTypeGPIOOutput(CE_BASE, CE);
-
 
 	//Configure and enable SSI port
 	// Use internal 16Mhz RC oscillator as SSI clock source
