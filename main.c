@@ -26,49 +26,54 @@ void SysTickIntHandler(void)
 	uint32_t ADCValue;
 	uint8_t i;
 	static uint32_t count = 0;
-	for(i = 0 ; i < ui32NumOfChannels ; i++)
+	if(BufferAEmpty || BufferBEmpty)
 	{
-		muxChannelChange(0); // Change channel
-		ROM_ADCProcessorTrigger(ADC0_BASE, 3);
-		while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
+		for(i = 0 ; i < ui32NumOfChannels ; i++)
 		{
+			muxChannelChange(i); // Change channel
+			ROM_ADCProcessorTrigger(ADC0_BASE, 3);
+			while(!ROM_ADCIntStatus(ADC0_BASE, 3, false))
+			{
+			}
+			ROM_ADCIntClear(ADC0_BASE, 3);
+			ROM_ADCSequenceDataGet(ADC0_BASE, 3, &ADCValue);
+			if(ui32BufferMode == MODE_A && BufferAEmpty == true)
+			{
+				bufferA[i][count] = (ADCValue>>4); // Make 12-bit ADC value to 8-bit and store in buffer
+			}
+			else if (ui32BufferMode == MODE_B && BufferBEmpty == true)
+			{
+				bufferB[i][count] = (ADCValue>>4);
+			}
 		}
-		ROM_ADCIntClear(ADC0_BASE, 3);
-		ROM_ADCSequenceDataGet(ADC0_BASE, 3, &ADCValue);
-		if(ui32BufferMode == MODE_A)
+		count = count + 1;
+		if(count == ui32WindowSize)
 		{
-			bufferA[i][count] = count;//(ADCValue>>4); // Make 12-bit ADC value to 8-bit and store in buffer
+			count = 0;
+			// Switch channels
+			if(ui32BufferMode == MODE_A)
+			{
+				ui32BufferMode = MODE_B;
+				BufferAEmpty = false;
+				transmitOn = true; // start transmission
+			}
+			else if(ui32BufferMode == MODE_B)
+			{
+				ui32BufferMode = MODE_A;
+				BufferBEmpty = false;
+				transmitOn = true; //  start transmission
+			}
 		}
-		else if (ui32BufferMode == MODE_B)
+		if(mode == 0)
 		{
-			bufferB[i][count] = count;//(ADCValue>>4);
+			GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, GPIO_PIN_1);
+			mode = 1;
 		}
-	}
-	count = count + 1;
-	if(count == ui32WindowSize)
-	{
-		count = 0;
-		// Switch channels
-		if(ui32BufferMode == MODE_A)
+		else
 		{
-			ui32BufferMode = MODE_B;
-			transmitOn = true; // start transmission
+			GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, 0);
+			mode = 0;
 		}
-		else if(ui32BufferMode == MODE_B)
-		{
-			ui32BufferMode = MODE_A;
-			transmitOn = true; //  start transmission
-		}
-	}
-	if(mode == 0)
-	{
-		GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, GPIO_PIN_1);
-		mode = 1;
-	}
-	else
-	{
-		GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, 0);
-		mode = 0;
 	}
 }
 
@@ -114,7 +119,7 @@ void ConfigureADC(void)
 	ROM_ADCSequenceEnable(ADC0_BASE, 3);
 	ROM_ADCIntClear(ADC0_BASE, 3);
 }
-
+//
 //// Configure ping pong buffers for ADC operations
 //void BufferInit(uint32_t channels, uint32_t window)
 //{
@@ -160,12 +165,12 @@ void IRQInterruptHandler(void)
 
 		// Do something
 		// EVK Board
-		GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
-		SysCtlDelay(SysCtlClockGet()/12);
-		GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
-		SysCtlDelay(SysCtlClockGet()/12);
-		UARTprintf("fail\n");
-
+//		GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
+//		SysCtlDelay(SysCtlClockGet()/12);
+//		GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+//		SysCtlDelay(SysCtlClockGet()/12);
+		//UARTprintf("fail\n");
+		RFPacketSent = true;
 		// 32-channel board
 		/*GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4);
 		SysCtlDelay(SysCtlClockGet()/12);
@@ -188,7 +193,7 @@ int main(void)
 {
 	int i, j;
 	// Setup the system clock to run at 12 Mhz from PLL with internal oscillator and disable main oscillator
-	ROM_SysCtlClockSet(SYSCTL_SYSDIV_16 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
+	ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
 
 	// Enable and configure the GPIO port for the LED operation.
 	// EVK Board
@@ -196,10 +201,15 @@ int main(void)
 	ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_0 | LED_1 | LED_2 | LED_3 );
 
     // Initial configuration parameters
-    ui32NumOfChannels = 1;  // number of channels
-    ui32WindowSize = 256;	// window length
+    ui32NumOfChannels = NUM_CHANNEL;  // number of channels
+    ui32WindowSize = WINDOW_SIZE;	// window length
     //BufferInit(ui32NumOfChannels, ui32WindowSize);	// initialise buffer
     transmitOn = false;
+    BufferAEmpty = true;
+    BufferBEmpty = true;
+
+    // Delay for a bit.
+    ROM_SysCtlDelay(SysCtlClockGet()/3);
 
     // Disable all interrupts
     ROM_IntMasterDisable();
@@ -226,6 +236,9 @@ int main(void)
 
     // Enable ADC operation
     ConfigureADC();
+
+    // Delay for a bit.
+    ROM_SysCtlDelay(SysCtlClockGet()/3);
 
     // Enable all interrupts
     ROM_IntMasterEnable();
@@ -259,6 +272,7 @@ int main(void)
     				}
     				ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, 0);
     			}
+    			BufferBEmpty = true;
     			transmitOn = false;
     		}
     		else if(ui32BufferMode == MODE_B) // Transfer contents from  A
@@ -275,6 +289,7 @@ int main(void)
     					}
     				}
     			}
+    			BufferAEmpty = true;
     			transmitOn = false;
     		}
     	}

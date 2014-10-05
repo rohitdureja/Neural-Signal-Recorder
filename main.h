@@ -10,13 +10,13 @@
 #include "nrf24l01.h"
 #include "spi.h"
 
-#define SAMPLE_FREQ 5000UL
+#define SAMPLE_FREQ 18000UL
 
 // Buffer modes
 #define MODE_A 0
 #define MODE_B 1
 
-#define NUM_CHANNEL 1
+#define NUM_CHANNEL 2
 #define WINDOW_SIZE 256
 
 // Function prototypes
@@ -38,8 +38,8 @@ void RFTransmit(uint8_t);
 // Ping Pong buffers for ADC
 //unsigned char **bufferA;
 //unsigned char **bufferB;
-unsigned char bufferA[NUM_CHANNEL][WINDOW_SIZE];
-unsigned char bufferB[NUM_CHANNEL][WINDOW_SIZE];
+volatile unsigned char bufferA[NUM_CHANNEL][WINDOW_SIZE];
+volatile unsigned char bufferB[NUM_CHANNEL][WINDOW_SIZE];
 
 // Buffers for RF RX and TX
 uint32_t ui32TxBuffer[MAX_PLOAD];
@@ -58,6 +58,8 @@ bool transmitOn;
 
 // Flag indicating current packet has been transferred
 bool RFPacketSent;
+bool BufferAEmpty;
+bool BufferBEmpty;
 
 // The error routine that is called if the driver library encounters an error.
 #ifdef DEBUG
