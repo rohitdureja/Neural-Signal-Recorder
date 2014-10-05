@@ -142,15 +142,16 @@ void ConfigureADC(void)
 void IRQInterruptHandler(void)
 {
 	SPISetCELow(); // set CE low to cease all operation
-
 	if(RFReadRegister(READ_REG + STATUSREG) & 0x20)
 	{
+		UARTprintf("yes\n");
 		RFPacketSent = true;
 		GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7);
 		RFWriteRegister(WRITE_REG + STATUSREG, 0x20); // Clear TX_DS flag
 	}
 	else
 	{
+		UARTprintf("No\n");
 		GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad: clear interrupt flag
 		//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32-channel: clear interrupt flag
 
@@ -170,7 +171,7 @@ void IRQInterruptHandler(void)
 //		GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
 //		SysCtlDelay(SysCtlClockGet()/12);
 		//UARTprintf("fail\n");
-		RFPacketSent = true;
+		//RFPacketSent = true;
 		// 32-channel board
 		/*GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4);
 		SysCtlDelay(SysCtlClockGet()/12);
@@ -217,6 +218,7 @@ int main(void)
     // Enable UART operation
     ConfigureUART();
 
+
     // Initialise the MUX channel. At initialization all channels are off.
     muxInit();
 
@@ -225,7 +227,7 @@ int main(void)
 
     // Set up IRQ for handling interrupts
     ROM_GPIOPinTypeGPIOInput(IRQ_BASE, IRQ);
-    ROM_GPIOPadConfigSet(IRQ_BASE, IRQ, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    ROM_GPIOPadConfigSet(IRQ_BASE, IRQ, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);
     GPIOIntRegister(IRQ_BASE, IRQInterruptHandler);
     ROM_GPIOIntTypeSet(IRQ_BASE, IRQ, GPIO_FALLING_EDGE);
     GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_7); // EVK Board Launchpad Board
@@ -258,6 +260,7 @@ int main(void)
     	{
     		if(ui32BufferMode == MODE_A) // Transfer contents from B
     		{
+    			UARTprintf("A\n");
     			for(i = 0 ; i < ui32NumOfChannels ; i++)
     			{
     				ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, LED_3);
@@ -277,10 +280,12 @@ int main(void)
     		}
     		else if(ui32BufferMode == MODE_B) // Transfer contents from  A
     		{
+    			UARTprintf("B\n");
     			for(i = 0 ; i < ui32NumOfChannels ; i++)
     			{
     				for(j = 0 ; j < ui32WindowSize ; j = j + 32)
     				{
+
     					RFPacketSent = false;
     					RFWriteSendBuffer((uint8_t *)(bufferA[i]+j), 32);
     					while(RFPacketSent != true)

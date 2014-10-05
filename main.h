@@ -16,7 +16,7 @@
 #define MODE_A 0
 #define MODE_B 1
 
-#define NUM_CHANNEL 2
+#define NUM_CHANNEL 3
 #define WINDOW_SIZE 256
 
 // Function prototypes
