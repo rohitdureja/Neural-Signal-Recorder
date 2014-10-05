@@ -116,7 +116,7 @@ uint32_t RFReadRegister(uint32_t ui32Register)
 }
 
 // write to send buffer. Returns numbers of bytes written
-uint32_t RFWriteSendBuffer(uint32_t *ui32Data, uint32_t ui32Bytes)
+uint32_t RFWriteSendBuffer(uint8_t *ui32Data, uint32_t ui32Bytes)
 {
 
 	uint32_t i;

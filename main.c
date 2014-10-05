@@ -35,14 +35,13 @@ void SysTickIntHandler(void)
 		}
 		ROM_ADCIntClear(ADC0_BASE, 3);
 		ROM_ADCSequenceDataGet(ADC0_BASE, 3, &ADCValue);
-		RFWriteSendBuffer(&ADCValue, 1);
 		if(ui32BufferMode == MODE_A)
 		{
-			bufferA[i][count] = (ADCValue>>4); // Make 12-bit ADC value to 8-bit and store in buffer
+			bufferA[i][count] = count;//(ADCValue>>4); // Make 12-bit ADC value to 8-bit and store in buffer
 		}
 		else if (ui32BufferMode == MODE_B)
 		{
-			bufferB[i][count] = (ADCValue>>4);
+			bufferB[i][count] = count;//(ADCValue>>4);
 		}
 	}
 	count = count + 1;
@@ -116,23 +115,23 @@ void ConfigureADC(void)
 	ROM_ADCIntClear(ADC0_BASE, 3);
 }
 
-// Configure ping pong buffers for ADC operations
-void BufferInit(uint32_t channels, uint32_t window)
-{
-	uint8_t i;
-	bufferA = (unsigned char **)malloc(channels*sizeof(unsigned char*));
-	for(i=0;i<channels;i++)
-	{
-		bufferA[i] = (unsigned char *)malloc(window*sizeof(unsigned char));
-	}
-	bufferB = (unsigned char **)malloc(channels*sizeof(unsigned char*));
-	for(i=0;i<channels;i++)
-	{
-		bufferB[i] = (unsigned char *)malloc(window*sizeof(unsigned char));
-	}
-	// Set buffer A as defualt buffer
-	ui32BufferMode = MODE_A;
-}
+//// Configure ping pong buffers for ADC operations
+//void BufferInit(uint32_t channels, uint32_t window)
+//{
+//	uint8_t i;
+//	bufferA = (unsigned char **)malloc(channels*sizeof(unsigned char*));
+//	for(i=0;i<channels;i++)
+//	{
+//		bufferA[i] = (unsigned char *)malloc(window*sizeof(unsigned char));
+//	}
+//	bufferB = (unsigned char **)malloc(channels*sizeof(unsigned char*));
+//	for(i=0;i<channels;i++)
+//	{
+//		bufferB[i] = (unsigned char *)malloc(window*sizeof(unsigned char));
+//	}
+//	// Set buffer A as defualt buffer
+//	ui32BufferMode = MODE_A;
+//}
 
 // Interrupt handler for RF TX failures
 void IRQInterruptHandler(void)
@@ -181,7 +180,7 @@ void RFTransmit(uint8_t buffer)
 // Main application code
 int main(void)
 {
-	int i;
+	int i, j;
 	// Setup the system clock to run at 12 Mhz from PLL with internal oscillator and disable main oscillator
 	ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
 
@@ -210,7 +209,7 @@ int main(void)
     // Initial configuration parameters
     ui32NumOfChannels = 1;  // number of channels
     ui32WindowSize = 256;	// window length
-    BufferInit(ui32NumOfChannels, ui32WindowSize);	// initialise buffer
+    //BufferInit(ui32NumOfChannels, ui32WindowSize);	// initialise buffer
     transmitOn = false;
 
     // Enable SysTick operation
@@ -220,31 +219,43 @@ int main(void)
     ConfigureADC();
     // --------------- TX operation  ------------- //
     // Generate packet to send
-    for(i = 1 ; i <= 32 ; ++i)
-    	ui32TxBuffer[i-1] = i;
+//    for(i = 1 ; i <= 32 ; ++i)
+//    	ui32TxBuffer[i-1] = i;
     // --------------- TX operation  ------------- //
 
     // Loop Forever
     while(1)
     {
    	//UARTprintf("here3\n");
-   // 	if(transmitOn == true)
-//    	{
-//    		if(ui32BufferMode == MODE_A) // Transfer contents from B
-//    		{
-//    			//UARTprintf("b\n");
-//    			//transmitOn = false;
-//    		}
-//    		else if(ui32BufferMode == MODE_B) // Transfer contents from  A
-//    		{
-//    			//UARTprintf("a\n");
-//    			//transmitOn = false;
-//    		}
-//    	}
-//    	else
-//    	{
-//    		ROM_SysCtlSleep();
-//    	}
+    	if(transmitOn == true)
+    	{
+    		if(ui32BufferMode == MODE_A) // Transfer contents from B
+    		{
+    			for(i = 0 ; i < ui32NumOfChannels ; i++)
+    			{
+    				for(j = 0 ; j < ui32WindowSize ; j = j + 32)
+    				{
+    					RFWriteSendBuffer((uint8_t *)(bufferB[i]+j), 32);
+    				}
+    			}
+    			transmitOn = false;
+    		}
+    		else if(ui32BufferMode == MODE_B) // Transfer contents from  A
+    		{
+    			for(i = 0 ; i < ui32NumOfChannels ; i++)
+    			{
+    				for(j = 0 ; j < ui32WindowSize ; j = j + 32)
+    				{
+    					RFWriteSendBuffer((uint8_t *)(bufferA[i]+j), 32);
+    				}
+    			}
+    			transmitOn = false;
+    		}
+    	}
+    	else
+    	{
+    		ROM_SysCtlSleep();
+    	}
     	// --------------- TX operation  ------------- //
         // Send packet every one second
 //        RFWriteSendBuffer(ui32TxBuffer, 32);

@@ -16,6 +16,9 @@
 #define MODE_A 0
 #define MODE_B 1
 
+#define NUM_CHANNEL 1
+#define WINDOW_SIZE 256
+
 // Function prototypes
 void SysTickHandler(void);
 void ConfigureUART();
@@ -33,8 +36,10 @@ void RFTransmit(uint8_t);
 
 // Global variables
 // Ping Pong buffers for ADC
-unsigned char **bufferA;
-unsigned char **bufferB;
+//unsigned char **bufferA;
+//unsigned char **bufferB;
+unsigned char bufferA[NUM_CHANNEL][WINDOW_SIZE];
+unsigned char bufferB[NUM_CHANNEL][WINDOW_SIZE];
 
 // Buffers for RF RX and TX
 uint32_t ui32TxBuffer[MAX_PLOAD];

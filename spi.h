@@ -31,7 +31,7 @@
 void SPIInit(void);
 
 // initiate data write on the SPI bus
-void SPIDataWrite(uint32_t);
+void SPIDataWrite(uint8_t);
 
 //initiate data read on the SPI bus
 uint32_t SPIDataRead();
