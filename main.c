@@ -39,11 +39,11 @@ void SysTickIntHandler(void)
 			ROM_ADCSequenceDataGet(ADC0_BASE, 3, &ADCValue);
 			if(ui32BufferMode == MODE_A && BufferAEmpty == true)
 			{
-				bufferA[i][count] = (ADCValue>>4); // Make 12-bit ADC value to 8-bit and store in buffer
+				bufferA[i][count] = count;//(ADCValue>>4); // Make 12-bit ADC value to 8-bit and store in buffer
 			}
 			else if (ui32BufferMode == MODE_B && BufferBEmpty == true)
 			{
-				bufferB[i][count] = (ADCValue>>4);
+				bufferB[i][count] = count;//(ADCValue>>4);
 			}
 		}
 		count = count + 1;
