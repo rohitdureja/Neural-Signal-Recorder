@@ -136,39 +136,45 @@ void ConfigureADC(void)
 // Interrupt handler for RF TX failures
 void IRQInterruptHandler(void)
 {
-	IntMasterDisable();
-	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad: clear interrupt flag
-	//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32-channel: clear interrupt flag
-
 	SPISetCELow(); // set CE low to cease all operation
 
-	// --------------- TX operation  ------------- //
-	//Flush TX buffer
-	SPISetCSNLow();
-	SPIDataWrite(FLUSH_TX);
-	SPIDataRead();
-	SPISetCSNHigh();
+	if(RFReadRegister(READ_REG + STATUSREG) & 0x20)
+	{
+		RFPacketSent = true;
+		GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7);
+		RFWriteRegister(WRITE_REG + STATUSREG, 0x20); // Clear TX_DS flag
+	}
+	else
+	{
+		GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad: clear interrupt flag
+		//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32-channel: clear interrupt flag
 
-	RFWriteRegister(WRITE_REG + STATUSREG, 0x10); // Clear MAX_RT flag
+		// --------------- TX operation  ------------- //
+		//Flush TX buffer
+		SPISetCSNLow();
+		SPIDataWrite(FLUSH_TX);
+		SPIDataRead();
+		SPISetCSNHigh();
 
-	// Do something
-	// EVK Board
-	GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
-	SysCtlDelay(SysCtlClockGet()/12);
-	GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
-	SysCtlDelay(SysCtlClockGet()/12);
-	UARTprintf("fail\n");
+		RFWriteRegister(WRITE_REG + STATUSREG, 0x10); // Clear MAX_RT flag
 
-	// 32-channel board
-	/*GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4);
-	SysCtlDelay(SysCtlClockGet()/12);
-	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
-	SysCtlDelay(SysCtlClockGet()/12);*/
+		// Do something
+		// EVK Board
+		GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
+		SysCtlDelay(SysCtlClockGet()/12);
+		GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+		SysCtlDelay(SysCtlClockGet()/12);
+		UARTprintf("fail\n");
 
-	// --------------- TX operation  ------------- //
+		// 32-channel board
+		/*GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4);
+		SysCtlDelay(SysCtlClockGet()/12);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
+		SysCtlDelay(SysCtlClockGet()/12);*/
 
+		// --------------- TX operation  ------------- //
+	}
 	SPISetCEHigh(); // set CE high again to start all operation
-	IntMasterEnable();
 }
 
 // Function to transfer passed buffer over RF
@@ -182,12 +188,21 @@ int main(void)
 {
 	int i, j;
 	// Setup the system clock to run at 12 Mhz from PLL with internal oscillator and disable main oscillator
-	ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
+	ROM_SysCtlClockSet(SYSCTL_SYSDIV_16 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
 
 	// Enable and configure the GPIO port for the LED operation.
 	// EVK Board
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 	ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_0 | LED_1 | LED_2 | LED_3 );
+
+    // Initial configuration parameters
+    ui32NumOfChannels = 1;  // number of channels
+    ui32WindowSize = 256;	// window length
+    //BufferInit(ui32NumOfChannels, ui32WindowSize);	// initialise buffer
+    transmitOn = false;
+
+    // Disable all interrupts
+    ROM_IntMasterDisable();
 
     // Enable UART operation
     ConfigureUART();
@@ -206,17 +221,16 @@ int main(void)
     GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_7); // EVK Board Launchpad Board
     //GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_4); // 32 channel Board
 
-    // Initial configuration parameters
-    ui32NumOfChannels = 1;  // number of channels
-    ui32WindowSize = 256;	// window length
-    //BufferInit(ui32NumOfChannels, ui32WindowSize);	// initialise buffer
-    transmitOn = false;
-
     // Enable SysTick operation
     ConfigureSysTick();
 
     // Enable ADC operation
     ConfigureADC();
+
+    // Enable all interrupts
+    ROM_IntMasterEnable();
+
+
     // --------------- TX operation  ------------- //
     // Generate packet to send
 //    for(i = 1 ; i <= 32 ; ++i)
@@ -233,10 +247,17 @@ int main(void)
     		{
     			for(i = 0 ; i < ui32NumOfChannels ; i++)
     			{
+    				ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, LED_3);
     				for(j = 0 ; j < ui32WindowSize ; j = j + 32)
     				{
+    					RFPacketSent = false;
     					RFWriteSendBuffer((uint8_t *)(bufferB[i]+j), 32);
+    					while(RFPacketSent != true)
+    					{
+    						ROM_SysCtlSleep();
+    					}
     				}
+    				ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, 0);
     			}
     			transmitOn = false;
     		}
@@ -246,7 +267,12 @@ int main(void)
     			{
     				for(j = 0 ; j < ui32WindowSize ; j = j + 32)
     				{
+    					RFPacketSent = false;
     					RFWriteSendBuffer((uint8_t *)(bufferA[i]+j), 32);
+    					while(RFPacketSent != true)
+    					{
+    						ROM_SysCtlSleep();
+    					}
     				}
     			}
     			transmitOn = false;

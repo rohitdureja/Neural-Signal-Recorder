@@ -79,7 +79,8 @@ void RFInit(uint32_t ui32Mode)
 		RFWriteRegister(WRITE_REG + DYNPD, 0x01);
 		RFWriteRegister(WRITE_REG + FEATURE, 0x04); // enable dynamic payload length
 		RFWriteRegister(WRITE_REG + RF_SETUP, 0x0F); // set data rate at 2mbps and power at 0dBm
-		RFWriteRegister(WRITE_REG + CONFIG, 0x6E); // MAX_RT interrupt on IRQ and TX mode on
+		//RFWriteRegister(WRITE_REG + CONFIG, 0x6E); // MAX_RT interrupt on IRQ and TX mode on
+		RFWriteRegister(WRITE_REG + CONFIG, 0x4E); // MAX_RT and TX_DS interrupt on IRQ
 
 		// Flush SPI RX FIFO to remove residual data
 		SPIRXFlush();

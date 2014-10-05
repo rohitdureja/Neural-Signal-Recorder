@@ -56,6 +56,9 @@ bool isConfigured;
 // Flag indicating transfer window
 bool transmitOn;
 
+// Flag indicating current packet has been transferred
+bool RFPacketSent;
+
 // The error routine that is called if the driver library encounters an error.
 #ifdef DEBUG
 void
