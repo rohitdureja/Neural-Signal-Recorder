@@ -23,7 +23,7 @@
 #define CE_BASE 		GPIO_PORTB_BASE
 #define SPI_PORT_BASE 	GPIO_PORTD_BASE // define for SPI gpio port base
 #define SPI_BASE 		SSI3_BASE // define for SPI base
-#define IRQ_BASE 		GPIO_PORTB_BASE // EVK, 32 channel
+#define IRQ_BASE 		GPIO_PORTB_BASE
 
 // Function definitions
 
@@ -34,7 +34,7 @@ void SPIInit(void);
 void SPIDataWrite(uint8_t);
 
 //initiate data read on the SPI bus
-uint32_t SPIDataRead();
+uint8_t SPIDataRead();
 
 // flush SPI RX buffer
 void SPIRXFlush();

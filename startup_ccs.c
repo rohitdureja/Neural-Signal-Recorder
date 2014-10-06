@@ -35,6 +35,8 @@ void ResetISR(void);
 static void NmiSR(void);
 static void FaultISR(void);
 static void IntDefaultHandler(void);
+//extern void IRQInterruptHandler(void);
+//extern void TimerIntHandler(void);
 
 //*****************************************************************************
 //
@@ -50,10 +52,6 @@ extern void _c_int00(void);
 //
 //*****************************************************************************
 extern uint32_t __STACK_TOP;
-
-// External interrupt handlers
-extern void SysTickIntHandler(void);
-extern void IRQInterruptHandler(void);
 
 //*****************************************************************************
 //
@@ -81,9 +79,9 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
     IntDefaultHandler,                      // The PendSV handler
-    SysTickIntHandler,                      // The SysTick handler
+    IntDefaultHandler,                      // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
-    IRQInterruptHandler,                    // GPIO Port B
+    IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E

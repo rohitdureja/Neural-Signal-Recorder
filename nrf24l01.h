@@ -55,19 +55,19 @@
 #define FEATURE 	0x1D  //feature register
 
 // initialize the RF module
-void RFInit();
+void RFInit(uint8_t);
 
 // write into a register. Returns status
-uint32_t RFWriteRegister(uint32_t, uint32_t);
+uint32_t RFWriteRegister(uint8_t, uint8_t);
 
 // read from a RF register. Returns status
-uint32_t RFReadRegister(uint32_t);
+uint32_t RFReadRegister(uint8_t);
 
 // write to send buffer. Returns numbers of bytes written
-uint32_t RFWriteSendBuffer(uint8_t *, uint32_t);
+uint32_t RFWriteSendBuffer(uint8_t *, uint8_t);
 
 // read from recive buffer. Returns number of bytes read
-uint32_t RFReadRecieveBuffer(uint32_t *);
+uint32_t RFReadRecieveBuffer(uint8_t *);
 
 
 #endif /* NRF24L01_H_ */

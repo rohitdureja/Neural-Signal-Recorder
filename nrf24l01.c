@@ -6,10 +6,9 @@
  */
 
 #include "nrf24l01.h"
-#include "utils/uartstdio.h"
 
 // initialize the RF module
-void RFInit(uint32_t ui32Mode)
+void RFInit(uint8_t ui32Mode)
 {
 	SPIInit();
 
@@ -80,7 +79,7 @@ void RFInit(uint32_t ui32Mode)
 		RFWriteRegister(WRITE_REG + FEATURE, 0x04); // enable dynamic payload length
 		RFWriteRegister(WRITE_REG + RF_SETUP, 0x0F); // set data rate at 2mbps and power at 0dBm
 		//RFWriteRegister(WRITE_REG + CONFIG, 0x6E); // MAX_RT interrupt on IRQ and TX mode on
-		RFWriteRegister(WRITE_REG + CONFIG, 0x4E); // MAX_RT and TX_DS interrupt on IRQ
+		RFWriteRegister(WRITE_REG + CONFIG, 0x4E); // MAX_RT and TX_DS interrupt on IRQ and TX mode on
 
 		// Flush SPI RX FIFO to remove residual data
 		SPIRXFlush();
@@ -91,7 +90,7 @@ void RFInit(uint32_t ui32Mode)
 }
 
 // write into a register. returns status
-uint32_t RFWriteRegister(uint32_t ui32Register, uint32_t ui32Value)
+uint32_t RFWriteRegister(uint8_t ui32Register, uint8_t ui32Value)
 {
 	uint32_t ui32Status;
 	SPISetCSNLow();
@@ -104,7 +103,7 @@ uint32_t RFWriteRegister(uint32_t ui32Register, uint32_t ui32Value)
 }
 
 // read from a RF register. returns read value
-uint32_t RFReadRegister(uint32_t ui32Register)
+uint32_t RFReadRegister(uint8_t ui32Register)
 {
 	uint32_t ui32Value;
 	SPISetCSNLow();
@@ -117,10 +116,10 @@ uint32_t RFReadRegister(uint32_t ui32Register)
 }
 
 // write to send buffer. Returns numbers of bytes written
-uint32_t RFWriteSendBuffer(uint8_t *ui32Data, uint32_t ui32Bytes)
+uint32_t RFWriteSendBuffer(uint8_t *ui32Data, uint8_t ui32Bytes)
 {
-
 	uint32_t i;
+
 	//Flush TX buffer
 	SPISetCSNLow();
 	SPIDataWrite(FLUSH_TX);
@@ -141,14 +140,11 @@ uint32_t RFWriteSendBuffer(uint8_t *ui32Data, uint32_t ui32Bytes)
 
 	// Flush SPI RX FIFO to remove residual data
 	SPIRXFlush();
-
-
 	return i;
-
 }
 
 // read from recive buffer. Returns number of bytes read
-uint32_t RFReadRecieveBuffer(uint32_t *ui32Data)
+uint32_t RFReadRecieveBuffer(uint8_t *ui32Data)
 {
 	uint32_t ui32Bytes;
 	uint32_t i;

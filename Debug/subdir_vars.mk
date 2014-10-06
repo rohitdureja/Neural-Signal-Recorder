@@ -4,7 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CMD_SRCS += \
-../four_ch_neural_recorder_ccs.cmd 
+../project0_ccs.cmd 
 
 C_SRCS += \
 ../adg731.c \
