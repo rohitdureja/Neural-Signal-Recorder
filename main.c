@@ -55,8 +55,8 @@ void IRQInitialize(void)
 	GPIOIntRegister(IRQ_BASE, IRQInterruptHandler);
 	ROM_GPIOIntTypeSet(IRQ_BASE, IRQ, GPIO_FALLING_EDGE);
 	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7);
-	GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad Board
-	//GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_4); // 32 channel Boaes
+	//GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad Board
+	GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_4); // 32 channel Boaes
 }
 
 // Configure timer to interrupt at a rate of SAMPLE_FREQ
@@ -70,7 +70,7 @@ void ConfigureTimer()
 	ROM_IntEnable(INT_TIMER0A);
 	ROM_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 	ROM_TimerEnable(TIMER0_BASE, TIMER_A);
-	UARTprintf("Timer configured\n");
+	//UARTprintf("Timer configured\n");
 }
 
 // Configure ADC
@@ -89,8 +89,8 @@ void ConfigureADC()
 int main(void)
 {
     int i, j;
-	// Setup the system clock to run at 12.5 Mhz from PLL with internal oscillator and disable main oscillator
-	ROM_SysCtlClockSet(SYSCTL_SYSDIV_10 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
+	// Setup the system clock to run at 20MHz Mhz from PLL with internal oscillator and disable main oscillator
+	ROM_SysCtlClockSet(SYSCTL_SYSDIV_16 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
 
     // Disable all interrupts
     ROM_IntMasterDisable();
@@ -100,6 +100,10 @@ int main(void)
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
     ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_0 | LED_1 | LED_2 | LED_3 );
 
+    // 32-channel Boars
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+    ROM_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
+
     // Initialise global configuration
     ui32NumOfChannels = NUM_CHANNEL;
     ui32WindowSize = WINDOW_SIZE;
@@ -108,9 +112,7 @@ int main(void)
     BufferAEmpty = true;
     BufferBEmpty = true;
 
-    // 32-channel Boars
-    /*ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
-    ROM_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);*/
+
 
     // Initialize RF module port for TX
     RFInit(1);
@@ -149,7 +151,7 @@ int main(void)
     		if(ui32BufferMode == MODE_A) // Transfer contents from B
     	    {
     	   		//UARTprintf("A\n");
-    			ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
+    			//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
     	   		for(i = 0 ; i < ui32NumOfChannels ; i++)
     	    	{
 
@@ -159,19 +161,19 @@ int main(void)
     	    			RFWriteSendBuffer((uint8_t *)(bufferB[i]+j), 32);
     	    			while(RFPacketSent != true)
     	    			{
-    	    				ROM_SysCtlSleep();
+    	    				ROM_SysCtlDeepSleep();
     	    			}
     	    		}
 
     	    	}
-    	   		ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+    	   		//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
     	    	BufferBEmpty = true;
     	    	transmitOn = false;
     	    }
     	    else if(ui32BufferMode == MODE_B) // Transfer contents from  A
     	    {
     	    	//UARTprintf("B\n");
-    	    	ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
+    	    	//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
     	    	for(i = 0 ; i < ui32NumOfChannels ; i++)
     	    	{
     	    		for(j = 0 ; j < ui32WindowSize ; j = j + 32)
@@ -181,18 +183,18 @@ int main(void)
     	    			RFWriteSendBuffer((uint8_t *)(bufferA[i]+j), 32);
     	    			while(RFPacketSent != true)
     	    			{
-    	    				ROM_SysCtlSleep();
+    	    				ROM_SysCtlDeepSleep();
     	    			}
     	    		}
     	    	}
-    	   		ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+    	   		//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
     	    	BufferAEmpty = true;
     	    	transmitOn = false;
     	    }
     	}
     	else
     	{
-    		ROM_SysCtlSleep();
+    		ROM_SysCtlDeepSleep();
     	}
 //    	// --------------- TX operation  ------------- //
 //    	// Send packet every one second
@@ -250,12 +252,14 @@ void TimerIntHandler()
 			}
 			if(mode == 0)
 			{
-				GPIOPinWrite(GPIO_PORTB_BASE, LED_3, 0);
+				ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4); // 32 channel
+				//GPIOPinWrite(GPIO_PORTB_BASE, LED_3, 0); // EVK
 				mode = 1;
 			}
 			else if(mode == 1)
 			{
-				GPIOPinWrite(GPIO_PORTB_BASE, LED_3, LED_3);
+				ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4); // 32 channel
+				//GPIOPinWrite(GPIO_PORTB_BASE, LED_3, LED_3); // EVK
 				mode = 0;
 			}
 		}
@@ -265,8 +269,8 @@ void TimerIntHandler()
 // Interrupt handler called RF max retries reached or transmission complete
 void IRQInterruptHandler(void)
 {
-	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad: clear interrupt flag
-	//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32-channel: clear interrupt flag
+	//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad: clear interrupt flag
+	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32-channel: clear interrupt flag
 	SPISetCELow(); // set CE low to cease all operation
 
 	if(RFReadRegister(READ_REG + STATUSREG) & 0x20)
