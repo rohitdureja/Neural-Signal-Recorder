@@ -70,18 +70,21 @@ void ConfigureTimer()
 	ROM_IntEnable(INT_TIMER0A);
 	ROM_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 	ROM_TimerEnable(TIMER0_BASE, TIMER_A);
-	//UARTprintf("Timer configured\n");
+	UARTprintf("Timer configured\n");
 }
 
 // Configure ADC
 void ConfigureADC()
 {
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
-	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
-	ROM_GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_3); // EVK Board
+	//ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE); // EVK Board
+	//ROM_GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_3); // EVK Board
+	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // 32 channel
+	ROM_GPIOPinTypeADC(GPIO_PORTB_BASE, GPIO_PIN_5); // 32 channel
 	ROM_ADCSequenceConfigure(ADC0_BASE, 3, ADC_TRIGGER_PROCESSOR, 0);
 	ROM_ADCReferenceSet(ADC0_BASE, ADC_REF_EXT_3V);
-	ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END);
+	//ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END); // EVK Board
+	ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH11 | ADC_CTL_IE | ADC_CTL_END); // 32 channel
 	ROM_ADCSequenceEnable(ADC0_BASE, 3);
 	ROM_ADCIntClear(ADC0_BASE, 3);
 }
@@ -97,8 +100,8 @@ int main(void)
 
     // Enable and configure the GPIO port for the LED operation.
     // EVK Board
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
-    ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_0 | LED_1 | LED_2 | LED_3 );
+    //ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+   // ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_0 | LED_1 | LED_2 | LED_3 );
 
     // 32-channel Boars
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
@@ -113,10 +116,12 @@ int main(void)
     BufferBEmpty = true;
 
 
+    ROM_SysCtlDelay(ROM_SysCtlClockGet());
 
     // Initialize RF module port for TX
     RFInit(1);
     IRQInitialize();
+
 
     // Initialise MUX
     muxInit();
@@ -161,7 +166,7 @@ int main(void)
     	    			RFWriteSendBuffer((uint8_t *)(bufferB[i]+j), 32);
     	    			while(RFPacketSent != true)
     	    			{
-    	    				ROM_SysCtlDeepSleep();
+    	    				ROM_SysCtlSleep();
     	    			}
     	    		}
 
@@ -183,7 +188,7 @@ int main(void)
     	    			RFWriteSendBuffer((uint8_t *)(bufferA[i]+j), 32);
     	    			while(RFPacketSent != true)
     	    			{
-    	    				ROM_SysCtlDeepSleep();
+    	    				ROM_SysCtlSleep();
     	    			}
     	    		}
     	    	}
@@ -194,7 +199,7 @@ int main(void)
     	}
     	else
     	{
-    		ROM_SysCtlDeepSleep();
+    		ROM_SysCtlSleep();
     	}
 //    	// --------------- TX operation  ------------- //
 //    	// Send packet every one second
@@ -250,19 +255,19 @@ void TimerIntHandler()
 				BufferBEmpty = false;
 				transmitOn = true; //  start transmission
 			}
+		}
 			if(mode == 0)
 			{
 				ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4); // 32 channel
-				//GPIOPinWrite(GPIO_PORTB_BASE, LED_3, 0); // EVK
+				//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, 0); // EVK
 				mode = 1;
 			}
 			else if(mode == 1)
 			{
-				ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4); // 32 channel
-				//GPIOPinWrite(GPIO_PORTB_BASE, LED_3, LED_3); // EVK
+				ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0); // 32 channel
+				//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, LED_3); // EVK
 				mode = 0;
 			}
-		}
 	}
 }
 
@@ -295,7 +300,7 @@ void IRQInterruptHandler(void)
 //		SysCtlDelay(SysCtlClockGet()/12);
 //		GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
 //		SysCtlDelay(SysCtlClockGet()/12);
-//		UARTprintf("fail\n");
+		UARTprintf("fail\n");
 
 		// 32-channel board
 		/*GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4);

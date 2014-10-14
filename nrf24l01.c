@@ -87,6 +87,21 @@ void RFInit(uint8_t ui32Mode)
 
 		SPISetCEHigh(); // enable all communication
 	}
+	RFWriteRegister(WRITE_REG + STATUSREG, 0x20); // Clear TX_DS flag
+	RFWriteRegister(WRITE_REG + STATUSREG, 0x10); // Clear MAX_RT flag
+
+	//Flush TX buffer
+	SPISetCSNLow();
+	SPIDataWrite(FLUSH_TX);
+	SPIDataRead();
+	SPISetCSNHigh();
+
+	//Flush RX buffer
+	SPISetCSNLow();
+	SPIDataWrite(FLUSH_RX);
+	SPIDataRead();
+	SPISetCSNHigh();
+
 }
 
 // write into a register. returns status
