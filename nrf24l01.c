@@ -138,7 +138,7 @@ uint32_t RFWriteSendBuffer(uint8_t *ui32Data, uint8_t ui32Bytes)
 	//Flush TX buffer
 	SPISetCSNLow();
 	SPIDataWrite(FLUSH_TX);
-	SPIDataRead();
+	//SPIDataRead();
 	SPISetCSNHigh();
 
 	SPISetCELow(); // disable all communications

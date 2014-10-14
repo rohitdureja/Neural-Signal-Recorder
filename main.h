@@ -18,7 +18,7 @@
 #define MODE_A 0
 #define MODE_B 1
 
-#define NUM_CHANNEL 1
+#define NUM_CHANNEL 4
 #define WINDOW_SIZE 256
 
 // Define pin to LED color mapping.
