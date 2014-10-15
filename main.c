@@ -70,7 +70,7 @@ void ConfigureTimer()
 	ROM_IntEnable(INT_TIMER0A);
 	ROM_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 	ROM_TimerEnable(TIMER0_BASE, TIMER_A);
-	UARTprintf("Timer configured\n");
+	//UARTprintf("Timer configured\n");
 }
 
 // Configure ADC
@@ -93,8 +93,8 @@ int main(void)
 {
     int i, j;
 	// Setup the system clock to run at 20MHz Mhz from PLL with internal oscillator and disable main oscillator
-	//ROM_SysCtlClockSet(SYSCTL_SYSDIV_16 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
-    ROM_SysCtlClockSet(SYSCTL_SYSDIV_8 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
+	ROM_SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
+    //ROM_SysCtlClockSet(SYSCTL_SYSDIV_8 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
 
     // Disable all interrupts
     ROM_IntMasterDisable();
@@ -128,7 +128,7 @@ int main(void)
     muxInit();
 
     // configure UART for console operation
-    ConfigureUART();
+    //ConfigureUART();
 
     // Configure ADC
     ConfigureADC();
@@ -149,6 +149,8 @@ int main(void)
     // Enable all interrupts
     ROM_IntMasterEnable();
 
+    ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+    ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_1, LED_1);
     // Loop Forever
     while(1)
     {
@@ -157,7 +159,7 @@ int main(void)
     		if(ui32BufferMode == MODE_A) // Transfer contents from B
     	    {
     	   		//UARTprintf("A\n");
-    			//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
+    			ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
     	   		for(i = 0 ; i < ui32NumOfChannels ; i++)
     	    	{
 
@@ -165,7 +167,7 @@ int main(void)
     	    		{
     	    			RFPacketSent = false;
     	    			bufferB[i][j] = i;
-    	    			RFWriteSendBuffer((uint8_t *)(bufferB[i]+j), 32);
+    	    			RFWriteSendBuffer(bufferB[i]+j, 32);
     	    			while(RFPacketSent != true)
     	    			{
     	    				ROM_SysCtlSleep();
@@ -173,14 +175,14 @@ int main(void)
     	    		}
 
     	    	}
-    	   		//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+    	   		ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
     	    	BufferBEmpty = true;
     	    	transmitOn = false;
     	    }
     	    else if(ui32BufferMode == MODE_B) // Transfer contents from  A
     	    {
     	    	//UARTprintf("B\n");
-    	    	//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
+    	    	ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_1, 0);
     	    	for(i = 0 ; i < ui32NumOfChannels ; i++)
     	    	{
     	    		for(j = 0 ; j < ui32WindowSize ; j = j + 32)
@@ -188,14 +190,14 @@ int main(void)
 
     	    			RFPacketSent = false;
     	    			bufferA[i][j] = i;
-    	    			RFWriteSendBuffer((uint8_t *)(bufferA[i]+j), 32);
+    	    			RFWriteSendBuffer(bufferA[i]+j, 32);
     	    			while(RFPacketSent != true)
     	    			{
     	    				ROM_SysCtlSleep();
     	    			}
     	    		}
     	    	}
-    	   		//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+    	   		ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_1, LED_1);
     	    	BufferAEmpty = true;
     	    	transmitOn = false;
     	    }
@@ -289,10 +291,10 @@ void IRQInterruptHandler(void)
 	else
 	{
 		//Flush TX buffer
-//		SPISetCSNLow();
-//		SPIDataWrite(FLUSH_TX);
-//		SPIDataRead();
-//		SPISetCSNHigh();
+		SPISetCSNLow();
+		SPIDataWrite(FLUSH_TX);
+		SPIDataRead();
+		SPISetCSNHigh();
 
 		RFWriteRegister(WRITE_REG + STATUSREG, 0x10); // Clear MAX_RT flag
 		RFPacketSent = true;

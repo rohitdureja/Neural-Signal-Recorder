@@ -18,7 +18,7 @@
 #define MODE_A 0
 #define MODE_B 1
 
-#define NUM_CHANNEL 4
+#define NUM_CHANNEL 3
 #define WINDOW_SIZE 256
 
 // Define pin to LED color mapping.
@@ -38,8 +38,8 @@ void ConfigureTimer(void);
 // Ping Pong buffers for ADC
 //unsigned char **bufferA;
 //unsigned char **bufferB;
-volatile unsigned char bufferA[NUM_CHANNEL][WINDOW_SIZE];
-volatile unsigned char bufferB[NUM_CHANNEL][WINDOW_SIZE];
+unsigned char bufferA[NUM_CHANNEL][WINDOW_SIZE];
+unsigned char bufferB[NUM_CHANNEL][WINDOW_SIZE];
 
 // Buffers for RF RX and TX
 uint8_t ui32TxBuffer[MAX_PLOAD];

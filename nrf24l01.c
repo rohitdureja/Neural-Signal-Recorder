@@ -131,15 +131,15 @@ uint32_t RFReadRegister(uint8_t ui32Register)
 }
 
 // write to send buffer. Returns numbers of bytes written
-uint32_t RFWriteSendBuffer(uint8_t *ui32Data, uint8_t ui32Bytes)
+void RFWriteSendBuffer(uint8_t *ui32Data, uint8_t ui32Bytes)
 {
 	uint32_t i;
 
 	//Flush TX buffer
-	SPISetCSNLow();
-	SPIDataWrite(FLUSH_TX);
-	//SPIDataRead();
-	SPISetCSNHigh();
+//	SPISetCSNLow();
+//	SPIDataWrite(FLUSH_TX);
+//	SPIDataRead();
+//	SPISetCSNHigh();
 
 	SPISetCELow(); // disable all communications
 	SPISetCSNLow();
@@ -155,7 +155,6 @@ uint32_t RFWriteSendBuffer(uint8_t *ui32Data, uint8_t ui32Bytes)
 
 	// Flush SPI RX FIFO to remove residual data
 	SPIRXFlush();
-	return i;
 }
 
 // read from recive buffer. Returns number of bytes read
