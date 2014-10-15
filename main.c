@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "inc/hw_types.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
@@ -89,6 +90,28 @@ void ConfigureADC()
 	ROM_ADCIntClear(ADC0_BASE, 3);
 }
 
+void BufferInit()
+{
+	int i, j;
+	bufferA = (unsigned char **)malloc(NUM_CHANNEL * sizeof(unsigned char *));
+	for(i = 0 ; i < NUM_CHANNEL ; ++i)
+		bufferA[i] = (unsigned char *)malloc(WINDOW_SIZE*sizeof(unsigned char));
+	bufferB = (unsigned char **)malloc(NUM_CHANNEL * sizeof(unsigned char *));
+	for(i = 0 ; i < NUM_CHANNEL ; ++i)
+		bufferB[i] = (unsigned char *)malloc(WINDOW_SIZE*sizeof(unsigned char));
+
+	for(i = 0 ; i < NUM_CHANNEL ; ++i)
+	{
+		for(j = 0 ; j < WINDOW_SIZE ; ++j)
+			bufferA[i][j] = j;
+	}
+	for(i = 0 ; i < NUM_CHANNEL ; ++i)
+	{
+		for(j = 0 ; j < WINDOW_SIZE ; ++j)
+			bufferB[i][j] = j;
+	}
+}
+
 int main(void)
 {
     int i, j;
@@ -108,6 +131,9 @@ int main(void)
     //ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
     //ROM_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
 
+    // configure UART for console operation
+    ConfigureUART();
+
     // Initialise global configuration
     ui32NumOfChannels = NUM_CHANNEL;
     ui32WindowSize = WINDOW_SIZE;
@@ -115,6 +141,7 @@ int main(void)
     transmitOn = false;
     BufferAEmpty = true;
     BufferBEmpty = true;
+    BufferInit();
 
 
     ROM_SysCtlDelay(ROM_SysCtlClockGet());
@@ -126,9 +153,6 @@ int main(void)
 
     // Initialise MUX
     muxInit();
-
-    // configure UART for console operation
-    //ConfigureUART();
 
     // Configure ADC
     ConfigureADC();
@@ -158,7 +182,6 @@ int main(void)
     	{
     		if(ui32BufferMode == MODE_A) // Transfer contents from B
     	    {
-    	   		//UARTprintf("A\n");
     			ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
     	   		for(i = 0 ; i < ui32NumOfChannels ; i++)
     	    	{
@@ -181,7 +204,6 @@ int main(void)
     	    }
     	    else if(ui32BufferMode == MODE_B) // Transfer contents from  A
     	    {
-    	    	//UARTprintf("B\n");
     	    	ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_1, 0);
     	    	for(i = 0 ; i < ui32NumOfChannels ; i++)
     	    	{
