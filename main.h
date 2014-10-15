@@ -19,7 +19,7 @@
 #define MODE_B 1
 
 #define NUM_CHANNEL 4
-#define WINDOW_SIZE 256
+#define WINDOW_SIZE 128
 
 // Define pin to LED color mapping.
 #define LED_0	GPIO_PIN_0

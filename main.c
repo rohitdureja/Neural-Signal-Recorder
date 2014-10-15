@@ -90,26 +90,16 @@ void ConfigureADC()
 	ROM_ADCIntClear(ADC0_BASE, 3);
 }
 
+// Initialise buffer
 void BufferInit()
 {
-	int i, j;
+	int i;
 	bufferA = (unsigned char **)malloc(NUM_CHANNEL * sizeof(unsigned char *));
 	for(i = 0 ; i < NUM_CHANNEL ; ++i)
 		bufferA[i] = (unsigned char *)malloc(WINDOW_SIZE*sizeof(unsigned char));
 	bufferB = (unsigned char **)malloc(NUM_CHANNEL * sizeof(unsigned char *));
 	for(i = 0 ; i < NUM_CHANNEL ; ++i)
 		bufferB[i] = (unsigned char *)malloc(WINDOW_SIZE*sizeof(unsigned char));
-
-	for(i = 0 ; i < NUM_CHANNEL ; ++i)
-	{
-		for(j = 0 ; j < WINDOW_SIZE ; ++j)
-			bufferA[i][j] = j;
-	}
-	for(i = 0 ; i < NUM_CHANNEL ; ++i)
-	{
-		for(j = 0 ; j < WINDOW_SIZE ; ++j)
-			bufferB[i][j] = j;
-	}
 }
 
 int main(void)
@@ -189,7 +179,7 @@ int main(void)
     	    		for(j = 0 ; j < ui32WindowSize ; j = j + 32)
     	    		{
     	    			RFPacketSent = false;
-    	    			bufferB[i][j] = i;
+    	    			//bufferB[i][j] = i;
     	    			RFWriteSendBuffer(bufferB[i]+j, 32);
     	    			while(RFPacketSent != true)
     	    			{
@@ -211,7 +201,7 @@ int main(void)
     	    		{
 
     	    			RFPacketSent = false;
-    	    			bufferA[i][j] = i;
+    	    			//bufferA[i][j] = i;
     	    			RFWriteSendBuffer(bufferA[i]+j, 32);
     	    			while(RFPacketSent != true)
     	    			{
