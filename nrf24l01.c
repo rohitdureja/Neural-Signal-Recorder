@@ -73,12 +73,12 @@ void RFInit(uint8_t ui32Mode)
 		SPISetCSNHigh();
 		RFWriteRegister(WRITE_REG + EN_AA, 0x01);
 		RFWriteRegister(WRITE_REG + EN_RXADDR, 0x01);
-		RFWriteRegister(WRITE_REG + SETUP_RETR, 0x12); // set retries to 5 and delay to 500us
+		RFWriteRegister(WRITE_REG + SETUP_RETR, 0x12); // set retries to 1 and delay to 250us
 		RFWriteRegister(WRITE_REG + RF_CH, 20); // set RF channel
 		RFWriteRegister(WRITE_REG + DYNPD, 0x01);
 		RFWriteRegister(WRITE_REG + FEATURE, 0x04); // enable dynamic payload length
 		RFWriteRegister(WRITE_REG + RF_SETUP, 0x0F); // set data rate at 2mbps and power at 0dBm
-		RFWriteRegister(WRITE_REG + CONFIG, 0x6E); // MAX_RT interrupt on IRQ and TX mode on
+		//RFWriteRegister(WRITE_REG + CONFIG, 0x6E); // MAX_RT interrupt on IRQ and TX mode on
 		RFWriteRegister(WRITE_REG + CONFIG, 0x4E); // MAX_RT and TX_DS interrupt on IRQ and TX mode on
 
 		// Flush SPI RX FIFO to remove residual data
@@ -89,6 +89,8 @@ void RFInit(uint8_t ui32Mode)
 	}
 	RFWriteRegister(WRITE_REG + STATUSREG, 0x20); // Clear TX_DS flag
 	RFWriteRegister(WRITE_REG + STATUSREG, 0x10); // Clear MAX_RT flag
+	RFWriteRegister(WRITE_REG + STATUSREG, 0x40); // Clear RX_DR flag
+
 
 	//Flush TX buffer
 	SPISetCSNLow();

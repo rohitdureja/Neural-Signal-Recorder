@@ -18,7 +18,7 @@
 #define MODE_A 0
 #define MODE_B 1
 
-#define NUM_CHANNEL 4
+#define NUM_CHANNEL 2
 #define WINDOW_SIZE 256
 
 // Define pin to LED color mapping.
@@ -43,20 +43,27 @@ unsigned char **bufferB;
 //unsigned char bufferB[NUM_CHANNEL][WINDOW_SIZE];
 
 // Buffers for RF RX and TX
-uint8_t ui32TxBuffer[MAX_PLOAD];
-uint8_t ui32RxBuffer[MAX_PLOAD];
+uint8_t ui8TxBuffer[MAX_PLOAD];
+uint8_t ui8RxBuffer[MAX_PLOAD];
 
 // configuration parameters
-uint8_t ui32NumOfChannels;
-uint32_t ui32WindowSize;
-uint8_t ui32BufferMode;
+volatile uint8_t ui32NumOfChannels;
+volatile uint32_t ui32WindowSize;
+volatile uint32_t ui32SamplingFrequency;
+volatile uint8_t ui32BufferMode;
+
+// Channels to sample from
+uint8_t *channelIndex;
+
+// Flag indicating if initial parameters have been received
+volatile bool isConfigured;
 
 // Flag indicating transfer window
-bool transmitOn;
+volatile bool transmitOn;
 
 // Flag indicating current packet has been transferred
-bool RFPacketSent;
-bool BufferAEmpty;
-bool BufferBEmpty;
+volatile bool RFPacketSent;
+volatile bool BufferAEmpty;
+volatile bool BufferBEmpty;
 
 #endif /* MAIN_H_ */
