@@ -106,8 +106,8 @@ int main(void)
 {
     int i, j;
 	// Setup the system clock to run at 20MHz Mhz from PLL with internal oscillator and disable main oscillator
-	//ROM_SysCtlClockSet(SYSCTL_SYSDIV_10 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
-    ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
+	ROM_SysCtlClockSet(SYSCTL_SYSDIV_10 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_MAIN_OSC_DIS);
+    //ROM_SysCtlClockSet(SYSCTL_SYSDIV_8 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
 
     // Disable all interrupts
     ROM_IntMasterDisable();
@@ -131,7 +131,7 @@ int main(void)
 
     // configure UART for console operation
     ConfigureUART();
-
+    UARTprintf("here\n");
     // Initialise global configuration
     ui32NumOfChannels = 4;
     ui32WindowSize = 256;
@@ -157,7 +157,10 @@ int main(void)
 
     while(isConfigured == false)
     {
-
+    	ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
+    	ROM_SysCtlDelay(ROM_SysCtlClockGet()/12);
+    	ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+    	ROM_SysCtlDelay(ROM_SysCtlClockGet()/12);
     }
 
     // Disable all interrupts
@@ -339,7 +342,15 @@ void IRQInterruptHandler(void)
 	if(RFReadRegister(READ_REG + STATUSREG) & 0x20) // successful transmission
 	{
 		RFWriteRegister(WRITE_REG + STATUSREG, 0x20); // Clear TX_DS flag
-		RFPacketSent = true;
+		if(RFReadRecieveBuffer(ui8RxBuffer) > 0)
+		{
+			if(ui8RxBuffer[0] == 13) // reset flag
+			{
+				UARTprintf("herhe\n");
+				ROM_SysCtlReset();
+			}
+		}
+			RFPacketSent = true;
 	}
 	else if(RFReadRegister(READ_REG + STATUSREG) & 0x10) // max retries
 	{
