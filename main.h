@@ -53,7 +53,7 @@ volatile uint32_t ui32SamplingFrequency;
 volatile uint8_t ui32BufferMode;
 
 // Channels to sample from
-uint8_t *channelIndex;
+volatile uint8_t *channelIndex;
 
 // Flag indicating if initial parameters have been received
 volatile bool isConfigured;

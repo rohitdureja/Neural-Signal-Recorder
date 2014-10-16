@@ -219,7 +219,7 @@ int main(void)
     	    			RFWriteSendBuffer(bufferB[i]+j, 32);
     	    			while(RFPacketSent != true)
     	    			{
-    	    				//ROM_SysCtlSleep();
+    	    				ROM_SysCtlSleep();
     	    			}
     	    		}
 
@@ -241,7 +241,7 @@ int main(void)
     	    			RFWriteSendBuffer(bufferA[i]+j, 32);
     	    			while(RFPacketSent != true)
     	    			{
-    	    				//ROM_SysCtlSleep();
+    	    				ROM_SysCtlSleep();
     	    			}
     	    		}
     	    	}
@@ -252,7 +252,7 @@ int main(void)
     	}
     	else
     	{
-    		//ROM_SysCtlSleep();
+    		ROM_SysCtlSleep();
     	}
 //    	// --------------- TX operation  ------------- //
 //    	// Send packet every one second
@@ -335,6 +335,7 @@ void TimerIntHandler()
 void IRQInterruptHandler(void)
 {
 	uint32_t ui32Bytes, i;
+	static uint16_t failcount = 0;
 	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad: clear interrupt flag
 	//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32-channel: clear interrupt flag
 	SPISetCELow(); // set CE low to cease all operation
@@ -342,15 +343,8 @@ void IRQInterruptHandler(void)
 	if(RFReadRegister(READ_REG + STATUSREG) & 0x20) // successful transmission
 	{
 		RFWriteRegister(WRITE_REG + STATUSREG, 0x20); // Clear TX_DS flag
-		if(RFReadRecieveBuffer(ui8RxBuffer) > 0)
-		{
-			if(ui8RxBuffer[0] == 13) // reset flag
-			{
-				UARTprintf("herhe\n");
-				ROM_SysCtlReset();
-			}
-		}
-			RFPacketSent = true;
+		failcount = 0;
+		RFPacketSent = true;
 	}
 	else if(RFReadRegister(READ_REG + STATUSREG) & 0x10) // max retries
 	{
@@ -360,6 +354,12 @@ void IRQInterruptHandler(void)
 		SPIDataRead();
 		SPISetCSNHigh();
 		RFWriteRegister(WRITE_REG + STATUSREG, 0x10); // Clear MAX_RT flag
+
+		// If TX failed more than 1000 consecutive times, reset system
+		failcount+=1;
+		if(failcount == 1000)
+			ROM_SysCtlReset();
+
 		RFPacketSent = true;
 
 	}
@@ -374,7 +374,7 @@ void IRQInterruptHandler(void)
 			channelIndex = (uint8_t *)malloc(ui32NumOfChannels*sizeof(uint8_t));
 			for(i = 0 ; i < ui32NumOfChannels ; ++i)
 			{
-				channelIndex[i] = i;//ui8RxBuffer[4+i];
+				channelIndex[i] = ui8RxBuffer[i*2 + 4];
 				UARTprintf("%d\n", channelIndex[i]);
 			}
 		}
