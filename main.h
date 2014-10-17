@@ -51,6 +51,7 @@ volatile uint8_t ui32NumOfChannels;
 volatile uint32_t ui32WindowSize;
 volatile uint32_t ui32SamplingFrequency;
 volatile uint8_t ui32BufferMode;
+volatile uint32_t ui32GainSetting;
 
 // Channels to sample from
 volatile uint8_t *channelIndex;

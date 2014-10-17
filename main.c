@@ -55,9 +55,10 @@ void IRQInitialize(void)
 	ROM_GPIOPadConfigSet(IRQ_BASE, IRQ, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 	GPIOIntRegister(IRQ_BASE, IRQInterruptHandler);
 	ROM_GPIOIntTypeSet(IRQ_BASE, IRQ, GPIO_FALLING_EDGE);
-	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7);
-	GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad Board
-	//GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_4); // 32 channel Boaes
+	//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK board
+	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32 channel board
+	//GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad Board
+	GPIOIntEnable(IRQ_BASE, GPIO_INT_PIN_4); // 32 channel Boaes
 }
 
 // Configure timer to interrupt at a rate of SAMPLE_FREQ
@@ -78,14 +79,14 @@ void ConfigureTimer()
 void ConfigureADC()
 {
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
-	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE); // EVK Board
-	ROM_GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_3); // EVK Board
-	//ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // 32 channel
-	//ROM_GPIOPinTypeADC(GPIO_PORTB_BASE, GPIO_PIN_5); // 32 channel
+	//ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE); // EVK Board
+	//ROM_GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_3); // EVK Board
+	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // 32 channel
+	ROM_GPIOPinTypeADC(GPIO_PORTB_BASE, GPIO_PIN_5); // 32 channel
 	ROM_ADCSequenceConfigure(ADC0_BASE, 3, ADC_TRIGGER_PROCESSOR, 0);
 	ROM_ADCReferenceSet(ADC0_BASE, ADC_REF_EXT_3V);
-	ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END); // EVK Board
-	//ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH11 | ADC_CTL_IE | ADC_CTL_END); // 32 channel
+	//ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END); // EVK Board
+	ROM_ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH11 | ADC_CTL_IE | ADC_CTL_END); // 32 channel
 	ROM_ADCSequenceEnable(ADC0_BASE, 3);
 	ROM_ADCIntClear(ADC0_BASE, 3);
 }
@@ -118,8 +119,8 @@ int main(void)
     ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_0 | LED_1 | LED_2 | LED_3 );
 
     // 32-channel Boars
-    //ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
-    //ROM_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+    ROM_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
 
 //    ROM_SysCtlPeripheralClockGating(true);
 //    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
@@ -157,9 +158,14 @@ int main(void)
 
     while(isConfigured == false)
     {
-    	ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0);
+//    	ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, 0); // EVK Board
+//    	ROM_SysCtlDelay(ROM_SysCtlClockGet()/12);
+//    	ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+//    	ROM_SysCtlDelay(ROM_SysCtlClockGet()/12);
+
+    	ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0); // 32 channel board
     	ROM_SysCtlDelay(ROM_SysCtlClockGet()/12);
-    	ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_0, LED_0);
+    	ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4);
     	ROM_SysCtlDelay(ROM_SysCtlClockGet()/12);
     }
 
@@ -169,7 +175,6 @@ int main(void)
     // Now that configuration is received, change to TX
     RFInit(1);
     IRQInitialize();
-
 
     // Delay for a bit
     ROM_SysCtlDelay(ROM_SysCtlClockGet()/3);
@@ -282,7 +287,10 @@ void TimerIntHandler()
 			}
 			ROM_ADCIntClear(ADC0_BASE, 3);
 			ROM_ADCSequenceDataGet(ADC0_BASE, 3, &ADCValue);
-			ADCValue = ADCValue>>4; // Make 12-bit ADC value to 8-bit
+			if(ui32GainSetting == 1) // Upper 8 bits
+				ADCValue = ADCValue>>4; // Make 12-bit ADC value to 8-bit
+			else if(ui32GainSetting == 2) // Lower 8 bits
+				ADCValue = ADCValue & 0x0FF;
 			if(ADCValue <= 0xFF - ui32NumOfChannels)
 				ADCValue += ui32NumOfChannels;
 
@@ -317,15 +325,15 @@ void TimerIntHandler()
 			if(mode == 0)
 			{
 
-				//ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4); // 32 channel
-				ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, 0); // EVK
+				ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4); // 32 channel
+				//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, 0); // EVK
 				mode = 1;
 			}
 			else if(mode == 1)
 			{
 
-				//ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0); // 32 channel
-				ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, LED_3); // EVK
+				ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0); // 32 channel
+				//ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_3, LED_3); // EVK
 				mode = 0;
 			}
 	}
@@ -336,8 +344,8 @@ void IRQInterruptHandler(void)
 {
 	uint32_t ui32Bytes, i;
 	static uint16_t failcount = 0;
-	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad: clear interrupt flag
-	//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32-channel: clear interrupt flag
+	//GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_7); // EVK, Launchpad: clear interrupt flag
+	GPIOIntClear(IRQ_BASE, GPIO_INT_PIN_4); // 32-channel: clear interrupt flag
 	SPISetCELow(); // set CE low to cease all operation
 
 	if(RFReadRegister(READ_REG + STATUSREG) & 0x20) // successful transmission
@@ -387,6 +395,11 @@ void IRQInterruptHandler(void)
 		{
 			ui32SamplingFrequency = (ui8RxBuffer[3] << 8) | ui8RxBuffer[2];
 			UARTprintf("Sampling Frequency: %d\n", ui32SamplingFrequency);
+		}
+		else if(ui8RxBuffer[0] == 4) // gain setting
+		{
+			ui32GainSetting = (ui8RxBuffer[3] << 8) | ui8RxBuffer[2];
+			UARTprintf("Gain setting: %d\n", ui32GainSetting);
 		}
 		else if(ui8RxBuffer[0] == 10) // configuration complete
 		{
